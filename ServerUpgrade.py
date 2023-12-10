@@ -7,6 +7,24 @@ def stop_instance(instance_id):
     waiter.wait(InstanceIds=[instance_id])
     print(f"Instance {instance_id} stopped.")
 
+
+def create_snapshot(instance_id):
+    ec2 = boto3.client('ec2')
+    
+    # Describe the instance to get the root volume ID
+    response = ec2.describe_instances(InstanceIds=[instance_id])
+    root_volume_id = response['Reservations'][0]['Instances'][0]['BlockDeviceMappings'][0]['Ebs']['VolumeId']
+    
+    # Create a snapshot of the root volume
+    snapshot_response = ec2.create_snapshot(VolumeId=root_volume_id, Description=f'Snapshot for instance {instance_id}')
+    
+    # Wait for the snapshot to be completed
+    snapshot_id = snapshot_response['SnapshotId']
+    waiter = ec2.get_waiter('snapshot_completed')
+    waiter.wait(SnapshotIds=[snapshot_id])
+    
+    print(f"Snapshot {snapshot_id} created for instance {instance_id}.")    
+
 def modify_instance_type(instance_id, new_instance_type):
     ec2 = boto3.client('ec2')
     ec2.modify_instance_attribute(InstanceId=instance_id, Attribute='instanceType', Value=new_instance_type)
