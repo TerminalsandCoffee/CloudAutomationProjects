@@ -41,6 +41,5 @@ waiter = rds_client.get_waiter('db_instance_available')
 waiter.wait(DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER)
 print("Restoration completed.")
 
-# Show if successful or not
-
+# print when completed 
 print("Script execution completed.")
