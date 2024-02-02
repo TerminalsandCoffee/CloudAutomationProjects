@@ -34,3 +34,33 @@ resource "aws_snapshot" "example_snapshot" {
 # and it's generally recommended to create a new instance with the desired type.
 
 # Use "terraform apply" to apply the changes.
+
+
+
+# Adds CloudWatch Events rule to trigger the Terraform script every Saturday at 9 AM (EST)
+
+/*
+
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name        = "terraform-schedule-rule"
+  description = "Run Terraform every Saturday at 9 AM EST"
+  schedule_expression = "cron(0 9 ? * SAT *)"  # Schedule for 9 AM on Saturdays
+}
+
+resource "aws_cloudwatch_event_target" "target" {
+  rule      = aws_cloudwatch_event_rule.schedule.name
+  arn       = "your_lambda_function_arn"  # Replace with your Lambda function or SSM document ARN that executes Terraform
+}
+
+# Grant necessary permissions to CloudWatch Events to trigger Lambda function or SSM document
+resource "aws_lambda_permission" "permission" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = "your_lambda_function_name"
+  principal     = "events.amazonaws.com"
+
+  source_arn = aws_cloudwatch_event_rule.schedule.arn
+}
+
+*/
+
