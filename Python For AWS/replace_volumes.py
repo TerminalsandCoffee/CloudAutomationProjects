@@ -1,92 +1,86 @@
 import boto3
 import csv
 from datetime import datetime
+import botocore.exceptions
 
-# Define variables
+# === CONFIG ===
 SNAPSHOT_DATE = "2025-07-11"
 REGION = "us-east-1"
 PROFILE = "default"
 CSV_FILE = "instance_volume_update.csv"
+DRY_RUN = False  # SET TO True FOR TESTING
 
-# Initialize AWS session and CSV file
+# === INIT ===
 session = boto3.Session(profile_name=PROFILE, region_name=REGION)
 ec2 = session.client('ec2')
 csv_rows = []
 
-# Loop through instances 01 to 50
+def log_and_append(instance_name, instance_id, volume_id, new_volume_id, snapshot_id, status):
+    row = [instance_name, instance_id or "N/A", volume_id or "N/A", new_volume_id or "N/A", snapshot_id or "N/A", status]
+    csv_rows.append(row)
+    print(f"[LOG] {instance_name}: {status}")
+
 for i in range(1, 51):
     instance_name = f"{i:02d}-prod-llm-mnmyummyyumyum-{i:02d}"
 
-    # Get instance ID
-    response = ec2.describe_instances(
-        Filters=[{'Name': 'tag:Name', 'Values': [instance_name]}]
-    )
-    instances = response['Reservations']
-    if not instances:
-        print(f"Instance {instance_name} not found")
-        csv_rows.append([instance_name, "N/A", "N/A", "N/A", "Not found"])
-        continue
-    instance_id = instances[0]['Instances'][0]['InstanceId']
+    try:
+        # 1. Find instance
+        response = ec2.describe_instances(Filters=[{'Name': 'tag:Name', 'Values': [instance_name]}])
+        instances = response['Reservations']
+        if not instances:
+            log_and_append(instance_name, None, None, None, None, "Not found")
+            continue
+        instance = instances[0]['Instances'][0]
+        instance_id = instance['InstanceId']
+        az = instance['Placement']['AvailabilityZone']
 
-    # Get volume ID attached to instance
-    volumes = ec2.describe_volumes(
-        Filters=[{'Name': 'attachment.instance-id', 'Values': [instance_id]}]
-    )['Volumes']
-    if not volumes:
-        print(f"No volume found for instance {instance_name}")
-        csv_rows.append([instance_name, instance_id, "N/A", "N/A", "No volume"])
-        continue
-    volume_id = volumes[0]['VolumeId']
+        # 2. Get root volume
+        volumes = ec2.describe_volumes(Filters=[{'Name': 'attachment.instance-id', 'Values': [instance_id]}])['Volumes']
+        if not volumes:
+            log_and_append(instance_name, instance_id, None, None, None, "No volume")
+            continue
+        volume_id = volumes[0]['VolumeId']
 
-    # Get snapshot ID for the volume taken on specified date
-    snapshots = ec2.describe_snapshots(
-        Filters=[
-            {'Name': 'volume-id', 'Values': [volume_id]},
-            {'Name': 'start-time', 'Values': [f"{SNAPSHOT_DATE}*"]}
-        ]
-    )['Snapshots']
-    if not snapshots:
-        print(f"No snapshot found for volume {volume_id} on {SNAPSHOT_DATE}")
-        csv_rows.append([instance_name, instance_id, volume_id, "N/A", "No snapshot"])
-        continue
-    snapshot_id = snapshots[0]['SnapshotId']
+        # 3. Find snapshot
+        snapshots = ec2.describe_snapshots(
+            Filters=[
+                {'Name': 'volume-id', 'Values': [volume_id]},
+                {'Name': 'start-time', 'Values': [f"{SNAPSHOT_DATE}*"]}
+            ]
+        )['Snapshots']
+        if not snapshots:
+            log_and_append(instance_name, instance_id, volume_id, None, None, "No snapshot")
+            continue
+        snapshot_id = snapshots[0]['SnapshotId']
 
-    # Create new volume from snapshot
-    availability_zone = instances[0]['Instances'][0]['Placement']['AvailabilityZone']
-    new_volume = ec2.create_volume(
-        SnapshotId=snapshot_id,
-        AvailabilityZone=availability_zone,
-        VolumeType='gp3'
-    )
-    new_volume_id = new_volume['VolumeId']
+        if DRY_RUN:
+            log_and_append(instance_name, instance_id, volume_id, "DRY-RUN-NEW", snapshot_id, "Skipped (dry run)")
+            continue
 
-    # Wait for new volume to be available
-    ec2.get_waiter('volume_available').wait(VolumeIds=[new_volume_id])
+        # 4. Create new volume
+        new_volume = ec2.create_volume(SnapshotId=snapshot_id, AvailabilityZone=az, VolumeType='gp3')
+        new_volume_id = new_volume['VolumeId']
+        ec2.get_waiter('volume_available').wait(VolumeIds=[new_volume_id])
 
-    # Stop the instance
-    ec2.stop_instances(InstanceIds=[instance_id])
-    ec2.get_waiter('instance_stopped').wait(InstanceIds=[instance_id])
+        # 5. Stop, detach, attach, start
+        ec2.stop_instances(InstanceIds=[instance_id])
+        ec2.get_waiter('instance_stopped').wait(InstanceIds=[instance_id])
 
-    # Detach old volume
-    ec2.detach_volume(VolumeId=volume_id)
-    ec2.get_waiter('volume_available').wait(VolumeIds=[volume_id])
+        ec2.detach_volume(VolumeId=volume_id)
+        ec2.get_waiter('volume_available').wait(VolumeIds=[volume_id])
 
-    # Attach new volume
-    ec2.attach_volume(
-        VolumeId=new_volume_id,
-        InstanceId=instance_id,
-        Device='/dev/xvda'
-    )
+        ec2.attach_volume(VolumeId=new_volume_id, InstanceId=instance_id, Device='/dev/xvda')
+        ec2.start_instances(InstanceIds=[instance_id])
 
-    # Start the instance
-    ec2.start_instances(InstanceIds=[instance_id])
+        log_and_append(instance_name, instance_id, volume_id, new_volume_id, snapshot_id, "Success")
 
-    # Record details
-    csv_rows.append([instance_name, instance_id, volume_id, new_volume_id, snapshot_id])
-    print(f"Processed {instance_name}: Old Volume {volume_id}, New Volume {new_volume_id}, Snapshot {snapshot_id}")
+    except Exception as e:
+        log_and_append(instance_name, instance_id or "N/A", volume_id or "N/A", None, None, f"Error: {str(e)}")
 
-# Write to CSV
-with open(CSV_FILE, 'w', newline='') as fRobin
+# === WRITE CSV ===
+with open(CSV_FILE, 'w', newline='') as f:
     writer = csv.writer(f)
-    writer.writerow(['InstanceName', 'InstanceId', 'OldVolumeId', 'NewVolumeId', 'SnapshotId'])
+    writer.writerow(['InstanceName', 'InstanceId', 'OldVolumeId', 'NewVolumeId', 'SnapshotId', 'Status'])
     writer.writerows(csv_rows)
+
+print(f"\nResults written to {CSV_FILE}")
