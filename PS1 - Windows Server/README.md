@@ -2,7 +2,7 @@
 
 A collection of PowerShell scripts for automating Windows Server management, deployment, and maintenance tasks. These scripts are designed to streamline operations in enterprise environments, with particular focus on supporting .NET backend infrastructure and applications.
 
-## 🎯 Overview
+## Overview
 
 This repository contains production-ready PowerShell scripts that automate common Windows Server administration tasks. These scripts are especially valuable for:
 - **.NET Application Deployment**: Automating IIS configuration, environment setup, and application lifecycle management
@@ -10,12 +10,17 @@ This repository contains production-ready PowerShell scripts that automate commo
 - **Server Maintenance**: Disk management, log collection, and system health monitoring
 - **Security & Compliance**: Password management, firewall configuration, and audit logging
 
-## 📋 Scripts
+## Organization
 
-### Application & Web Server Management
+This repository is organized by service/functionality to improve maintainability and discoverability. Each service folder contains scripts specific to that Windows Server component or task category.
 
-#### `IISInstall.ps1`
-Installs and configures Internet Information Services (IIS) with management tools. Essential for hosting .NET Framework and .NET Core applications.
+## Service Directories
+
+### [IIS](./IIS/)
+Scripts for managing Internet Information Services (IIS) and web server configuration.
+
+**Scripts:**
+- `IISInstall.ps1` - Installs and configures IIS with management tools for hosting .NET Framework and .NET Core applications
 
 **Use Cases:**
 - Setting up new web servers for .NET deployments
@@ -24,17 +29,19 @@ Installs and configures Internet Information Services (IIS) with management tool
 
 **Example:**
 ```powershell
+cd IIS
 .\IISInstall.ps1
 ```
 
 ---
 
-### Azure & Identity Management
+### [Azure-AD](./Azure-AD/)
+Scripts for managing Azure Active Directory and identity management.
 
-#### `AZ_Password_Reset.ps1`
-Bulk password reset utility for Azure AD users. Supports automated password rotation and user onboarding workflows.
+**Scripts:**
+- `AZ_Password_Reset.ps1` - Bulk password reset utility for Azure AD users with automated password rotation support
 
-**⚠️ Security Note:** This script contains placeholder credentials. Always use secure credential management (Azure Key Vault, Managed Identities, or secure parameter passing) in production environments.
+**Security Note:** This script contains placeholder credentials. Always use secure credential management (Azure Key Vault, Managed Identities, or secure parameter passing) in production environments.
 
 **Use Cases:**
 - Onboarding new users
@@ -44,153 +51,151 @@ Bulk password reset utility for Azure AD users. Supports automated password rota
 **Example:**
 ```powershell
 # Requires AzureAD module: Install-Module -Name AzureAD
+cd Azure-AD
 .\AZ_Password_Reset.ps1
 ```
 
 ---
 
-### Network Configuration
+### [Network](./Network/)
+Scripts for network configuration, firewall management, and connectivity.
 
-#### `StaticIP.ps1`
-Configures static IP addresses and DNS settings for network adapters. Critical for servers hosting .NET applications that require consistent network endpoints.
+**Scripts:**
+- `StaticIP.ps1` - Configures static IP addresses and DNS settings for network adapters
+- `FWRule.ps1` - Manages Windows Firewall rules programmatically
+- `HiddenNetworkConnection.ps1` - Configures connections to hidden wireless networks
 
 **Use Cases:**
 - Configuring application servers with fixed IPs
 - Setting up load balancer targets
-- Network infrastructure automation
-
-**Example:**
-```powershell
-.\StaticIP.ps1
-```
-
-#### `FWRule.ps1`
-Manages Windows Firewall rules programmatically. Useful for opening ports required by .NET applications (HTTP/HTTPS, custom ports).
-
-**Use Cases:**
 - Opening ports for web applications (80, 443, custom ports)
 - Configuring firewall rules for .NET services
 - Security hardening automation
 
 **Example:**
 ```powershell
+cd Network
+.\StaticIP.ps1
 .\FWRule.ps1
 ```
 
-#### `HiddenNetworkConnection.ps1`
-Configures connections to hidden wireless networks. Useful for development and testing environments.
-
 ---
 
-### System Maintenance & Monitoring
+### [Disk-Storage](./Disk-Storage/)
+Scripts for disk space management, cleanup, and monitoring.
 
-#### `Windows-Server-DiskReport.ps1`
-Generates comprehensive disk space reports for Windows Server volumes. Exports data to CSV for analysis and monitoring.
+**Scripts:**
+- `Windows-Server-DiskReport.ps1` - Generates comprehensive disk space reports with CSV export
+- `DiskCleanup.ps1` - Comprehensive cleanup utility (temp files, recycle bin, Windows Update cleanup, DISM)
+- `ClearTempDirectory.ps1` - Quick cleanup script for temporary directories
 
 **Use Cases:**
 - Monitoring disk usage for application servers
 - Capacity planning for .NET application deployments
+- Freeing disk space on application servers
+- Pre-deployment server preparation
 - Automated health checks
 
 **Example:**
 ```powershell
+# Run as Administrator
+cd Disk-Storage
 .\Windows-Server-DiskReport.ps1
 # Output: C:\disk_space_report.csv
-```
 
-#### `DiskCleanup.ps1`
-Comprehensive disk cleanup utility that removes temporary files, clears recycle bins, and performs Windows Update cleanup. Uses DISM for component store cleanup.
-
-**Use Cases:**
-- Freeing disk space on application servers
-- Pre-deployment server preparation
-- Maintenance automation
-
-**Example:**
-```powershell
-# Run as Administrator
 .\DiskCleanup.ps1
 ```
 
-#### `ClearTempDirectory.ps1`
-Quick cleanup script for temporary directories. Useful for freeing space before deployments.
-
 ---
 
-### Logging & Troubleshooting
+### [Windows-Update](./Windows-Update/)
+Scripts for managing Windows Update service and troubleshooting update issues.
 
-#### `WSUSTroubleshooting.ps1`
-Comprehensive Windows Update Service troubleshooting script. Resets update components and checks for pending reboots.
+**Scripts:**
+- `WSUSTroubleshooting.ps1` - Comprehensive Windows Update Service troubleshooting script that resets update components and checks for pending reboots
 
 **Use Cases:**
 - Resolving Windows Update issues on production servers
 - Pre-deployment server preparation
 - Automated troubleshooting workflows
+- System maintenance automation
 
 **Example:**
 ```powershell
 # Run as Administrator
+cd Windows-Update
 .\WSUSTroubleshooting.ps1
 ```
 
-#### `EVLogsbyDate.ps1`
-Exports Windows Event Logs (Application, System, Security) for a specific date range. Exports to CSV format.
+---
+
+### [Logging](./Logging/)
+Scripts for collecting, exporting, and archiving Windows Event Logs and application logs.
+
+**Scripts:**
+- `EVLogsbyDate.ps1` - Exports Windows Event Logs (Application, System, Security) for a specific date range to CSV
+- `LogsFromDate.ps1` - Alternative event log export script with date range filtering
+- `logpull.ps1` - Batch script for pulling and archiving event logs, application data files, and creating compressed backups
 
 **Use Cases:**
 - Collecting logs for .NET application troubleshooting
 - Security audits and compliance
 - Incident investigation
+- Log archival and backup
 
 **Example:**
 ```powershell
+cd Logging
 # Modify the date in the script before running
 .\EVLogsbyDate.ps1
+.\logpull.ps1
 ```
-
-#### `LogsFromDate.ps1`
-Alternative event log export script with date range filtering.
-
-#### `logpull.ps1`
-Batch script for pulling and archiving event logs, application data files, and creating compressed backups.
 
 ---
 
-### System Configuration
+### [System-Configuration](./System-Configuration/)
+Scripts for system-level configuration, environment variables, time synchronization, and system repair.
 
-#### `Insert_EnvPath.ps1`
-Adds directories to the system PATH environment variable. Useful for adding .NET SDK paths, custom tools, or application binaries.
+**Scripts:**
+- `Insert_EnvPath.ps1` - Adds directories to the system PATH environment variable
+- `Fix-WindowsTimeSync.ps1` - Fixes Windows time synchronization issues
+- `TimeFix.bat` - Batch script for time synchronization (legacy)
+- `FixWindowsIssues.bat` - Batch script that runs SFC and DISM to repair Windows system files
 
 **Use Cases:**
 - Adding .NET SDK to PATH
 - Configuring development environments
 - Application deployment automation
+- System time synchronization
+- Windows system file repair
 
 **Example:**
 ```powershell
+cd System-Configuration
 # Modify the path in the script before running
 .\Insert_EnvPath.ps1
+.\Fix-WindowsTimeSync.ps1
 ```
-
-#### `StaticIP.ps1`
-Configures static IP addresses and DNS servers for network adapters.
-
-#### `TimeFix.bat`
-Batch script for time synchronization (legacy script).
 
 ---
 
-### Software Management
+### [Software-Management](./Software-Management/)
+Scripts for installing, uninstalling, and managing software and drivers.
 
-#### `InstallSoftware.ps1`
-Installs and uninstalls Windows Installer (.msi) packages using WMI/CIM. Supports remote installation via UNC paths.
+**Scripts:**
+- `InstallSoftware.ps1` - Installs and uninstalls Windows Installer (.msi) packages using WMI/CIM with remote installation support via UNC paths
+- `RemoveDriver.ps1` - Removes and reinstalls Windows drivers using pnputil
+- `RemovePinned.ps1` - Removes applications from the Windows Start menu
 
 **Use Cases:**
 - Installing .NET Framework or .NET Runtime
 - Deploying application dependencies
 - Automated software provisioning
+- Driver management and troubleshooting
 
 **Example:**
 ```powershell
+cd Software-Management
 # Install from network share
 .\InstallSoftware.ps1
 
@@ -198,25 +203,21 @@ Installs and uninstalls Windows Installer (.msi) packages using WMI/CIM. Support
 # Get-CimInstance -Class Win32_Product -Filter "Name='ApplicationName'" | Invoke-CimMethod -MethodName Uninstall
 ```
 
-#### `RemoveDriver.ps1`
-Removes and reinstalls Windows drivers using pnputil.
+---
 
-#### `RemovePinned.ps1`
-Removes applications from the Windows Start menu.
+### [Utilities](./Utilities/)
+General-purpose utility scripts for file management and miscellaneous tasks.
+
+**Scripts:**
+- `RenameFile.ps1` - File renaming utilities (contains multiple language examples - batch and Python)
+
+**Use Cases:**
+- File management automation
+- Batch file operations
 
 ---
 
-### File Management
-
-#### `RenameFile.ps1`
-Batch and Python scripts for renaming files (legacy - contains multiple language examples).
-
-#### `FixWindowsIssues.bat`
-Batch script that runs SFC and DISM to repair Windows system files.
-
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -241,16 +242,16 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 Some scripts require additional PowerShell modules:
 
 ```powershell
-# Azure AD (for AZ_Password_Reset.ps1)
+# Azure AD (for Azure-AD/AZ_Password_Reset.ps1)
 Install-Module -Name AzureAD -Force
 
-# IIS Management (for IISInstall.ps1)
+# IIS Management (for IIS/IISInstall.ps1)
 # Included in Windows Server by default
 ```
 
 ---
 
-## 🔒 Security Best Practices
+## Security Best Practices
 
 1. **Never hardcode credentials** - Use secure parameter passing, Azure Key Vault, or Managed Identities
 2. **Run with least privilege** - Only use administrator privileges when necessary
@@ -260,7 +261,7 @@ Install-Module -Name AzureAD -Force
 
 ---
 
-## 🏗️ Integration with .NET Applications
+## Integration with .NET Applications
 
 These scripts are designed to support .NET application deployments and operations:
 
@@ -271,45 +272,73 @@ These scripts are designed to support .NET application deployments and operation
 - task: PowerShell@2
   displayName: 'Configure IIS for .NET App'
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/IISInstall.ps1'
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/IIS/IISInstall.ps1'
     pwsh: true
 ```
 
 ### Application Deployment Workflow
 
-1. **Pre-deployment**: Run `DiskCleanup.ps1` and `Windows-Server-DiskReport.ps1` to ensure adequate resources
-2. **Configuration**: Use `IISInstall.ps1` and `FWRule.ps1` to set up web server
-3. **Post-deployment**: Use `EVLogsbyDate.ps1` to verify application startup logs
+1. **Pre-deployment**: Run `Disk-Storage/DiskCleanup.ps1` and `Disk-Storage/Windows-Server-DiskReport.ps1` to ensure adequate resources
+2. **Configuration**: Use `IIS/IISInstall.ps1` and `Network/FWRule.ps1` to set up web server
+3. **Post-deployment**: Use `Logging/EVLogsbyDate.ps1` to verify application startup logs
 
 ### Monitoring & Maintenance
 
-- Schedule `Windows-Server-DiskReport.ps1` for capacity monitoring
-- Use `EVLogsbyDate.ps1` for application log collection
-- Run `DiskCleanup.ps1` as part of regular maintenance windows
+- Schedule `Disk-Storage/Windows-Server-DiskReport.ps1` for capacity monitoring
+- Use `Logging/EVLogsbyDate.ps1` for application log collection
+- Run `Disk-Storage/DiskCleanup.ps1` as part of regular maintenance windows
 
 ---
 
-## 📝 Naming Conventions
+## Script Categories
+
+### Web Server Management
+- `IIS/IISInstall.ps1` - IIS installation and configuration
+
+### Identity & Security
+- `Azure-AD/AZ_Password_Reset.ps1` - Azure AD user management
+- `Network/FWRule.ps1` - Firewall rule management
+
+### System Health & Maintenance
+- `Disk-Storage/Windows-Server-DiskReport.ps1` - Disk space monitoring
+- `Disk-Storage/DiskCleanup.ps1` - Comprehensive cleanup
+- `Windows-Update/WSUSTroubleshooting.ps1` - Update service troubleshooting
+- `System-Configuration/FixWindowsIssues.bat` - System file repair
+
+### Operations & Monitoring
+- `Logging/EVLogsbyDate.ps1` - Event log collection
+- `Logging/logpull.ps1` - Log archival
+
+### Infrastructure Automation
+- `Network/StaticIP.ps1` - Network configuration
+- `Software-Management/InstallSoftware.ps1` - Software deployment
+- `System-Configuration/Insert_EnvPath.ps1` - Environment configuration
+
+---
+
+## Naming Conventions
 
 Scripts follow PowerShell best practices where applicable:
 - **Verb-Noun format**: `Get-*`, `Set-*`, `Install-*`, `Remove-*`
 - **Descriptive names**: Clear indication of script purpose
-- **Consistent extensions**: All scripts use `.ps1` extension
+- **Consistent extensions**: All scripts use `.ps1` extension (batch files use `.bat`)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 When adding new scripts:
-1. Follow PowerShell best practices and coding standards
-2. Include comment-based help (`<# ... #>`)
-3. Add error handling with `try-catch` blocks
-4. Use parameters instead of hardcoded values
-5. Document use cases and examples
+
+1. **Place in appropriate service folder** - If a script spans multiple services, place in `Utilities/`
+2. **Follow PowerShell best practices** - Use proper coding standards and conventions
+3. **Include comment-based help** - Add `<# ... #>` help blocks
+4. **Add error handling** - Use `try-catch` blocks and meaningful error messages
+5. **Use parameters** - Avoid hardcoded values, use parameters instead
+6. **Document use cases** - Include examples and use case descriptions
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [PowerShell Documentation](https://docs.microsoft.com/powershell/)
 - [.NET on Windows Server](https://dotnet.microsoft.com/download)
@@ -318,16 +347,10 @@ When adding new scripts:
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 These scripts are provided as-is for educational and operational purposes. Always test scripts in a non-production environment before deployment. The authors are not responsible for any damage or data loss resulting from the use of these scripts.
 
 ---
 
-## 📧 Contact
-
-For questions or contributions, please refer to the main repository README.
-
----
-
-**Built for Windows Server automation with .NET applications in mind** 🚀
+**Built for Windows Server automation with .NET applications in mind**
