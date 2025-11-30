@@ -1,3 +1,4 @@
+import boto3
 import json
 import logging
 from botocore.exceptions import ClientError
