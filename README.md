@@ -2,7 +2,7 @@
 
 Welcome to the Cloud Automation Projects repository! This collection showcases a variety of scripts designed to automate tasks on Windows and Linux machines using Bash, PowerShell, and Python. 
 
-These scripts are inspired by real-world scenarios encountered in my day-to-day work as a Cloud Engineer.
+These scripts are inspired and sanitized by real-world scenarios encountered in my day-to-day work as a Cloud Engineer.
 
 ## Overview
 
@@ -10,7 +10,7 @@ In this repository, you will find scripts that address common challenges in clou
 
 - **AWS Automation**: Scripts for managing AWS resources such as EC2 instances, S3 buckets, IAM users, and more.
 - **Windows Server Management**: PowerShell scripts for configuring and troubleshooting Windows servers.
-- **Linux Automation**: Bash scripts for automating tasks on Linux servers.
+- **Linux Automation**: Bash scripts for automating tasks on Linux servers. (Coming Soon!)
 
 ## Highlights
 
