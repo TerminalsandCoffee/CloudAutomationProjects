@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-API Demo Traffic Generator
+API Traffic Generator
 
 Generates low-rate, spaced-out HTTP requests against a demo API server.
 Replace the example endpoints and payloads with your own demo routes.

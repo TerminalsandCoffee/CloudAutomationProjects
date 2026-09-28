@@ -1,4 +1,4 @@
-# API Demo Traffic Generator
+# API Traffic Generator
 
 Small Python utility for generating spaced-out HTTP traffic against a demo API server.
 
