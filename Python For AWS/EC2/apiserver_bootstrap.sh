@@ -11,6 +11,7 @@ sudo apt install -y \
     python3-pip \
     python3-venv \
     nginx \
+    openssl \
     git
 
 echo "Creating application directory..."
@@ -101,10 +102,32 @@ sudo systemctl daemon-reload
 sudo systemctl enable apidemo
 sudo systemctl restart apidemo
 
+echo "Configuring TLS certificate for nginx (self-signed lab cert)..."
+sudo mkdir -p /etc/nginx/ssl
+# Always regenerate for lab idempotency (safe to re-run).
+sudo openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+    -keyout /etc/nginx/ssl/api-lab.key \
+    -out /etc/nginx/ssl/api-lab.crt \
+    -subj "/CN=api-lab.mscloudwaf.com"
+
 sudo tee /etc/nginx/sites-available/apidemo > /dev/null << EOF
 server {
-    listen 80;
+    listen 80 default_server;
     server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    server_name _;
+
+    ssl_certificate /etc/nginx/ssl/api-lab.crt;
+    ssl_certificate_key /etc/nginx/ssl/api-lab.key;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -122,7 +145,7 @@ sudo systemctl restart nginx
 
 echo ""
 echo "==================================="
-echo "Demo API Installed Successfully"
+echo "API Installed Successfully"
 echo "==================================="
 echo ""
 echo "Endpoints:"
@@ -133,13 +156,19 @@ echo "/login"
 echo "/orders"
 echo "/payment"
 echo "/health"
+echo ""
+echo "Verify locally:"
+echo "  curl http://localhost/health"
+echo "  curl -k https://localhost/health"
+echo ""
+echo "Security group must allow TCP 80 and 443."
 
-
-/* After, manually run:
-chmod +x bootstrap.sh
-./bootstrap.sh
-
-curl http://localhost/health
-curl http://<server-ip>/users
-
-*/
+# After, manually run:
+# chmod +x apiserver_bootstrap.sh
+# ./apiserver_bootstrap.sh
+#
+# curl http://localhost/health
+# curl -k https://localhost/health
+# curl http://<server-ip>/users
+#
+# Security group must allow TCP 80 and 443.
