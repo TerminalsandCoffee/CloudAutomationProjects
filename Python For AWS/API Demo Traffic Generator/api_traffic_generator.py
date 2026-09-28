@@ -25,22 +25,21 @@ ROUNDS = int(os.getenv("ROUNDS", "3"))
 
 # Add, remove, or modify requests here.
 REQUESTS = [
+    {"method": "GET", "path": "/"},
     {"method": "GET", "path": "/health"},
-    {"method": "GET", "path": "/api/products"},
-    {"method": "GET", "path": "/api/users/1"},
+    {"method": "GET", "path": "/users"},
+    {"method": "GET", "path": "/users/1"},
+    {"method": "GET", "path": "/users/2"},
     {
         "method": "POST",
-        "path": "/api/search",
-        "json": {"query": "demo"},
+        "path": "/login",
+        "json": {"username": "demo-user", "password": "demo-password"},
     },
+    {"method": "GET", "path": "/orders"},
     {
         "method": "POST",
-        "path": "/api/orders",
-        "json": {
-            "product_id": 101,
-            "quantity": 1,
-            "source": "demo-traffic-generator",
-        },
+        "path": "/payment",
+        "json": {"order": 101, "amount": 49.99},
     },
 ]
 
