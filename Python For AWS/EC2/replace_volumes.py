@@ -8,7 +8,7 @@ SNAPSHOT_DATE = "2025-07-11"
 REGION = "us-east-1"
 PROFILE = "default"
 CSV_FILE = "instance_volume_update.csv"
-DRY_RUN = False  # SET TO True FOR TESTING
+DRY_RUN = True  # Set False only after reviewing the instance list
 
 # === INIT ===
 session = boto3.Session(profile_name=PROFILE, region_name=REGION)

@@ -121,6 +121,10 @@ celerybeat.pid
 
 # Environments
 .env
+*.pem
+.aws/credentials
+credentials
+*_backup*.json
 .venv
 env/
 venv/
