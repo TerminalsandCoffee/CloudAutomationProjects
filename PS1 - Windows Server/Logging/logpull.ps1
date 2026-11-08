@@ -21,8 +21,13 @@ echo creating backup of System Logs
 wevtutil epl System "%folder%\System-%fdate%.evtx"
 echo .
 cd \
-echo creating backing up of current SDF file
-COPY C:\Brink\POS\Register.sdf "%folder%\Register-%fdate%.sdf"
+echo POS database copy is opt-in (break-glass only)
+if /I "%INCLUDE_POS_SDF%"=="1" (
+  echo copying Register.sdf
+  COPY C:\Brink\POS\Register.sdf "%folder%\Register-%fdate%.sdf"
+) else (
+  echo Skipping POS SDF copy. Set INCLUDE_POS_SDF=1 to include.
+)
 echo .
 echo Zipping up Logs and SDF file
 echo .

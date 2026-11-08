@@ -1,45 +1,53 @@
+import os
+import sys
+
 import boto3
-import time
 
-# Replace these variables with your actual values
-DB_INSTANCE_IDENTIFIER = "rafs-test-db"
-SNAPSHOT_NAME = "rafs-test-db-snapshot"
-ENCRYPTED_SNAPSHOT_NAME = "rafs-test-db-encrypted-snapshot"
-#KMS_KEY_ID = "arn:aws:kms:"
-INSTANCE_CLASS = "db.t2.micro"
+DB_INSTANCE_IDENTIFIER = os.environ["DB_INSTANCE_IDENTIFIER"]
+SNAPSHOT_NAME = os.environ["SNAPSHOT_NAME"]
+ENCRYPTED_SNAPSHOT_NAME = os.environ["ENCRYPTED_SNAPSHOT_NAME"]
+RESTORE_IDENTIFIER = os.environ.get(
+    "RESTORE_DB_INSTANCE_IDENTIFIER", f"{DB_INSTANCE_IDENTIFIER}-restored"
+)
+KMS_KEY_ID = os.environ["KMS_KEY_ID"]
+INSTANCE_CLASS = os.environ.get("INSTANCE_CLASS", "db.t3.micro")
+EXECUTE = os.environ.get("EXECUTE", "false").lower() == "true"
 
-# Create an RDS client
-rds_client = boto3.client('rds')
+rds_client = boto3.client("rds")
 
-# Create Snapshot
-response = rds_client.create_db_snapshot(
+print(
+    f"Plan: snapshot {DB_INSTANCE_IDENTIFIER} -> {SNAPSHOT_NAME}, "
+    f"copy encrypted to {ENCRYPTED_SNAPSHOT_NAME}, restore as {RESTORE_IDENTIFIER}"
+)
+if RESTORE_IDENTIFIER == DB_INSTANCE_IDENTIFIER:
+    print("Refusing to restore over the live instance identifier.")
+    sys.exit(1)
+if not EXECUTE:
+    print("Dry run. Set EXECUTE=true to apply.")
+    sys.exit(0)
+
+rds_client.create_db_snapshot(
     DBSnapshotIdentifier=SNAPSHOT_NAME,
-    DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER
+    DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER,
 )
 print("Snapshot created:", SNAPSHOT_NAME)
 
-#  Copy the Snapshot to a New Snapshot with KMS Encryption
-response = rds_client.copy_db_snapshot(
+rds_client.copy_db_snapshot(
     SourceDBSnapshotIdentifier=SNAPSHOT_NAME,
     TargetDBSnapshotIdentifier=ENCRYPTED_SNAPSHOT_NAME,
-#    KmsKeyId=KMS_KEY_ID
+    KmsKeyId=KMS_KEY_ID,
 )
 print("Encrypted snapshot created:", ENCRYPTED_SNAPSHOT_NAME)
 
-# In-Place Restore using the Encrypted Snapshot
-response = rds_client.restore_db_instance_from_db_snapshot(
-    DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER,
+rds_client.restore_db_instance_from_db_snapshot(
+    DBInstanceIdentifier=RESTORE_IDENTIFIER,
     DBSnapshotIdentifier=ENCRYPTED_SNAPSHOT_NAME,
     DBInstanceClass=INSTANCE_CLASS,
-    MultiAZ=False
+    MultiAZ=False,
 )
-print("In-Place restore initiated.")
+print("Restore initiated to", RESTORE_IDENTIFIER)
 
-# Verify the In-Place Restore
-print("Waiting for the restoration to complete...")
-waiter = rds_client.get_waiter('db_instance_available')
-waiter.wait(DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER)
+waiter = rds_client.get_waiter("db_instance_available")
+waiter.wait(DBInstanceIdentifier=RESTORE_IDENTIFIER)
 print("Restoration completed.")
-
-# print when completed 
 print("Script execution completed.")

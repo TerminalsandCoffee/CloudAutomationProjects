@@ -30,6 +30,6 @@ Write-Host "`n✅ Report saved to C:\disk_space_report.csv`n"
 
 
 #How to run
-# as admin: Set-ExecutionPolicy Unrestricted -Scope Process
+# as admin: Set-ExecutionPolicy RemoteSigned -Scope Process
 # execute: .\Check-DiskSpace.ps1
 # saves to: C:\disk_space_report.csv

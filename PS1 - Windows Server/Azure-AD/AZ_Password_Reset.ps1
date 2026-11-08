@@ -1,19 +1,28 @@
-# Connect to Azure AD
-Connect-AzureAD
+<#
+.SYNOPSIS
+  Reset Azure AD user passwords from a caller-supplied list.
 
-# List of users
-$users = @(
-    "user1@terminalsandcoffee.com",
-    "user2@terminalsandcoffee.com",
-    "user3@terminalsandcoffee.com",
-    "user4@terminalsandcoffee.com",
-    "user5@terminalsandcoffee.com"
+.NOTES
+  Do not hardcode passwords or UPNs. Requires the AzureAD module and an
+  interactive admin login. Generate unique passwords per user in production
+  and store them in a secret store, not in this script.
+#>
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+param(
+  [Parameter(Mandatory)]
+  [string[]]$Users,
 
+  [Parameter(Mandatory)]
+  [SecureString]$NewPassword,
+
+  [bool]$ForceChangePasswordNextSignIn = $true
 )
 
-# Loop through each user and reset the password
-foreach ($user in $users) {
-    $newPassword = "PassW0rd!"
-    Set-AzureADUserPassword -ObjectId $user -Password $newPassword -ForceChangePasswordNextSignIn $true
-    Write-Host "Password reset for $user"
+Connect-AzureAD
+
+foreach ($user in $Users) {
+  if ($PSCmdlet.ShouldProcess($user, 'Reset Azure AD password')) {
+    Set-AzureADUserPassword -ObjectId $user -Password $NewPassword -ForceChangePasswordNextSignIn $ForceChangePasswordNextSignIn
+    Write-Host "Password reset issued for $user"
+  }
 }
